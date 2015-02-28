@@ -2,10 +2,12 @@ require 'json'
 require 'date'
 
 
+# Etract exif properties of files in a given directory
 class GPSExtractor
 
-  def initialize( directory = '.' )
+  def initialize( directory = '.' , type_of_file = ['.MOV','.jpg'] )
     @directory = directory
+    @type_of_file = type_of_file
   end
 
   def extract_all_postions
@@ -17,8 +19,7 @@ class GPSExtractor
 private
 
   def cmd
-   #"exiftool -j #{@directory}/*.MOV #{@directory}/*.jpg"
-   "exiftool -j #{@directory}/*.MOV"
+   "exiftool -j #{ @type_of_file.map{ |type| @directory + "/*" + type }.join(' ') }"
   end
 
 
@@ -27,7 +28,9 @@ private
     json.map do |j|
       {
         position: coordinate_decimal( j["GPSPosition"]),
-        created_at: convert_proper_date_format( j["CreateDate"] )
+        created_at: convert_proper_date_format( j["CreateDate"] ),
+        name: j['FileName'],
+        type: j['FileType']
       }
     end
   end
@@ -64,6 +67,7 @@ private
 end
 
 
+# Convert array of positions into a proper Geojson file and save it
 class GeoJsonBuilder
 
   def convert_to_line_string( positions )
@@ -78,7 +82,7 @@ class GeoJsonBuilder
   def convert_to_points( positions )
     @geojson = feature_collection( id: 'allid', title: 'videos' ) do
       positions.map do |p|
-        feature( :description => 'point', :stroke => '#eee' , :id => "#{(rand* 1000).to_i.to_s}") do
+        feature( p ) do
           point do
             position_to_array( p )
           end
@@ -118,15 +122,11 @@ class GeoJsonBuilder
   end
 
   def feature( options = {} )
+    properties = default_properties.merge!( options )
     {
       type: "Feature",
       geometry: yield,
-      properties: {
-        id:          options[:id]          || "description",
-        stroke:      options[:stroke]      || "#f86767",
-        title:       options[:title]       || "Trajectory",
-        description: options[:description] || 'The road'
-      }
+      properties: properties
     }
   end
 
@@ -139,11 +139,24 @@ class GeoJsonBuilder
   end
 
 
+  def default_properties
+    {
+        id:          "description",
+        stroke:      "#f86767",
+        title:       "Trajectory",
+        description: 'The road'
+    }
+  end
+
+
 
 end
 
 
 
-positions = GPSExtractor.new("/Users/sebastienvian/Desktop/photos-iphone").extract_all_postions
-GeoJsonBuilder.new.convert_to_points( positions ).save('./geojson.json')
+positions = GPSExtractor.new("/Users/sebastienvian/Desktop/photos-iphone" ).extract_all_postions
+images = positions.select { |p| p[:type] == 'JPEG' }
+videos = positions.select { |p| p[:type] == 'MOV' }
 
+GeoJsonBuilder.new.convert_to_points( videos ).save('./videos.json')
+GeoJsonBuilder.new.convert_to_line_string( images ).save('./images.json')
