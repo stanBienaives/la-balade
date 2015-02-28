@@ -155,7 +155,7 @@ end
 
 
 positions = GPSExtractor.new("/Users/sebastienvian/Desktop/photos-iphone" ).extract_all_postions
-images = positions.select { |p| p[:type] == 'JPEG' }
+images = positions.select { |p| true  }
 videos = positions.select { |p| p[:type] == 'MOV' }
 
 GeoJsonBuilder.new.convert_to_points( videos ).save('./videos.json')
