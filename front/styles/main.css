@@ -1,0 +1,36 @@
+/*map.html*/
+#map {
+   height: 100vh;
+   position: relative;
+   width: 100%;
+}
+
+
+/*index.html*/
+.header {
+   position: absolute;
+   top: 0px;
+   width: 100vw;
+   line-height: 40px;
+}
+
+.inner {
+   margin: auto;
+}
+
+.logo {
+   float: left;
+   border-color: black;
+   border-style: solid;
+   border-width: 1px;
+   width: 40px;
+   height: 40px;
+   border-radius: 50%;
+}
+
+
+
+
+
+
+

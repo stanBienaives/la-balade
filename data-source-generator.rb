@@ -1,40 +1,109 @@
 require 'json'
 require 'date'
+require 'geocoder'
+require 'pry'
 
 
 # Etract exif properties of files in a given directory
 class GPSExtractor
 
-  def initialize( directory = '.' , type_of_file = ['.MOV','.jpg'] )
-    @directory = directory
-    @type_of_file = type_of_file
+  def initialize( options= {} )
+    options[:directory] = options[:directories] if options[:directories]
+    options[:directory] = [options[:directory]] if options[:directory].is_a? String
+    raise ArgumentError, 'you should give at least a directory of a tag' if options[:directory].nil? && options[:filter_by_tag].nil?
+    @directory = options[:directory]
+    @type_of_file = options[:type_of_file] || ['JPG','MOV']
+    @set_description = options[:set_description] || false
+    @print_stats = options[:print_stats] || false
+
+    # options to filter by tag (only OSX )
+    # !! Caution in this case the given directory is not used files will be searched in all the computer
+    @filter_by_tag = options[:filter_by_tag] || false
+    @current_directory = %x(pwd)
   end
 
   def extract_all_postions
+    interpolations
+    stats if @print_stats
     data_extraction.sort_by{ |d| d[:created_at] }
-                   .reject!{ |d| d[:position].nil? }
+                   .reject{ |d| d[:position].nil? }
   end
 
 
 private
 
+  # simple wrapper for exiftool command line tool
   def cmd
-   "exiftool -j #{ @type_of_file.map{ |type| @directory + "/*" + type }.join(' ') }"
+    p 'cmd'
+    if !@filter_by_tag
+      "exiftool -j #{ @directory.map{ |dir| @type_of_file.map{ |type| dir + "/**" + type }.join(' ') }.join(' ')}"
+    else
+      "mdfind 'kMDItemUserTags == #{@filter_by_tag}' | xargs exiftool -j"
+    end
   end
 
 
+  # make interpolation for image not geotagged
+  def interpolations
+    data_extraction.sort_by! { |d| d[:created_at] }
+    data_extraction.each_with_index do |p,i|
+      if p[:position].nil?
+        # find next available position for interpolation
+        increment = 1
+        increment +=1 while data_extraction[i+increment][:position].nil? #|| i + increment <= data_extraction.length
+        p[:position]  = interpolation( p[:created_at] , data_extraction[i-1], data_extraction[i+increment] )
+      end
+    end
+  end
+
+  # guess position based on timestamps
+  def interpolation( timestamp , previous, nextp )
+    return nil if previous[:position].nil? || nextp[:position].nil?
+    # convert to unix timestamps for calculation
+    t1 = previous[:created_at].to_time.to_i.to_f
+    t2 = nextp[:created_at].to_time.to_i.to_f
+    t = timestamp.to_time.to_i.to_f
+    position = {}
+
+    ratio = (t - t1) / ( t2 - t1 )
+
+    %i(latitude longitude).each do |card|
+      # ratio = (position[card] - previous[:position][card] ) / (nextp[:position][card] - previous[:position][card] )
+      position[card] = (nextp[:position][card] - previous[:position][card]) * ratio + previous[:position][card]
+
+    end
+    position
+  end
+
+
+  def stats
+    puts "Total files:            #{data_extraction.count}"
+    puts "Total with no GPSdata:  #{data_extraction.count { |d| d[:position].nil?   } }"
+    puts "videos with no GPSdata: #{data_extraction.count { |d| d[:position].nil? && d[:type] == 'MOV' } }"
+  end
+
+
+  # extract meaningful information from raw exiftool output
   def data_extraction
+    return @data_extraction if @data_extraction
     json = JSON.parse(%x(#{cmd}))
-    json.map do |j|
+    @data_extraction = json.map do |j|
+      p j if j['CreateDate'].nil?
       {
         position: coordinate_decimal( j["GPSPosition"]),
         created_at: convert_proper_date_format( j["CreateDate"] ),
         name: j['FileName'],
-        type: j['FileType']
+        path: j["Directory"] + '/' + j['FileName'],
+        type: j['FileType'],
+        id: j['FileName'], # identifier will be the filename
+        description: description_from_coordinates( coordinate_decimal( j["GPSPosition"]) ),
+        altitude: j['GPSAltitude']
       }
     end
   end
 
+
+  # Transform coordinate into decimal
   def coordinate_decimal( raw_data )
     #format "24 deg 47' 24.99\" S, 65 deg 24' 14.95\" W"
     return nil if raw_data.nil?
@@ -64,14 +133,28 @@ private
     DateTime.parse "#{ date.gsub(':','/') } #{time}"
   end
 
+  # fetch place description based on position
+  def description_from_coordinates( p )
+    return "" unless @set_description
+    return "" if p.nil?
+    Timeout.timeout(2) do
+      address = Geocoder.address([p[:latitude], p[:longitude]].reverse)
+      p address
+      return address
+    end
+  rescue => e
+    p 'geocoding timeout'
+    return ""
+  end
+
 end
 
 
 # Convert array of positions into a proper Geojson file and save it
 class GeoJsonBuilder
 
-  def convert_to_line_string( positions )
-    @geojson  = feature( id: 'myid', stroke: '#999' , title: 'hello ma biche' ) do
+  def convert_to_line_string( positions, properties = {} )
+    @geojson  = feature( properties ) do
       lineString do
         positions.map{ |coordinates| position_to_array( coordinates ) }
       end
@@ -79,10 +162,10 @@ class GeoJsonBuilder
     self
   end
 
-  def convert_to_points( positions )
-    @geojson = feature_collection( id: 'allid', title: 'videos' ) do
+  def convert_to_points( positions , properties = {})
+    @geojson = feature_collection do
       positions.map do |p|
-        feature( p ) do
+        feature( p.merge( properties) ) do
           point do
             position_to_array( p )
           end
@@ -122,7 +205,7 @@ class GeoJsonBuilder
   end
 
   def feature( options = {} )
-    properties = default_properties.merge!( options )
+    properties = default_properties.merge( options )
     {
       type: "Feature",
       geometry: yield,
@@ -141,7 +224,6 @@ class GeoJsonBuilder
 
   def default_properties
     {
-        id:          "description",
         stroke:      "#f86767",
         title:       "Trajectory",
         description: 'The road'
@@ -154,9 +236,19 @@ end
 
 
 
-positions = GPSExtractor.new("/Users/sebastienvian/Desktop/photos-iphone" ).extract_all_postions
+# search in directory
+positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone",'/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA','/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU'], set_description: false, print_stats: false ).extract_all_postions
+
+# for search by tag
+#positions = GPSExtractor.new("dummydirectory", set_description: false, print_stats: false, filter_by_tag: 'Violet' ).extract_all_postions
+
+#positions = GPSExtractor.new(".", set_description: false, print_stats: true, type_of_file: ['.MOV'] ).extract_all_postions
 images = positions.select { |p| true  }
 videos = positions.select { |p| p[:type] == 'MOV' }
 
-GeoJsonBuilder.new.convert_to_points( videos ).save('./videos.json')
+# save videos
+GeoJsonBuilder.new.convert_to_points( videos ,
+  { "marker-color" => "#f86767", "marker-symbol" => "cinema", "marker-size" => "medium"} ).save('./videos.json')
+
+# save all points
 GeoJsonBuilder.new.convert_to_line_string( images ).save('./images.json')
