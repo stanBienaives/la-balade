@@ -25,8 +25,9 @@ class GPSExtractor
   def extract_all_postions
     interpolations
     stats if @print_stats
-    data_extraction.sort_by{ |d| d[:created_at] }
-                   .reject{ |d| d[:position].nil? }
+    numbering
+    cleaning
+    return data_extraction
   end
 
 
@@ -44,7 +45,7 @@ private
 
   # make interpolation for image not geotagged
   def interpolations
-    data_extraction.sort_by! { |d| d[:created_at] }
+    data_extraction.sort_by! { |d| d[:created_at] } # redondant...
     data_extraction.each_with_index do |p,i|
       if p[:position].nil?
         # find next available position for interpolation
@@ -74,6 +75,17 @@ private
     position
   end
 
+  # set index on each position
+  def numbering
+    index = 0;
+    data_extraction.sort_by! { |d| [:created_at] }
+                   .each { |d| index = index+1 ; d[:index] = index }
+  end
+
+  # remove photos with no positions
+  def cleaning
+    data_extraction.reject! { |d| d[:position].nil? }
+  end
 
   def stats
     puts "Total files:            #{data_extraction.count}"
