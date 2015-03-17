@@ -34,7 +34,6 @@ private
 
   # simple wrapper for exiftool command line tool
   def cmd
-    p 'cmd'
     if !@filter_by_tag
       "exiftool -j #{ @directory.map{ |dir| @type_of_file.map{ |type| dir + "/**" + type }.join(' ') }.join(' ')}"
     else
@@ -107,8 +106,8 @@ private
   def coordinate_decimal( raw_data )
     #format "24 deg 47' 24.99\" S, 65 deg 24' 14.95\" W"
     return nil if raw_data.nil?
-    longitude = raw_data.split(', ')[0]
-    latitude = raw_data.split(', ')[1]
+    longitude = raw_data.split(', ')[1]
+    latitude = raw_data.split(', ')[0]
     latitude  =  latitude.match /([0-9]{1,2}) deg ([0-9]{1,2})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
     longitude =  longitude.match /([0-9]{1,2}) deg ([0-9]{1,2})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
     {
@@ -138,7 +137,7 @@ private
     return "" unless @set_description
     return "" if p.nil?
     Timeout.timeout(2) do
-      address = Geocoder.address([p[:latitude], p[:longitude]].reverse)
+      address = Geocoder.address([p[:latitude], p[:longitude]])
       p address
       return address
     end
@@ -185,7 +184,7 @@ class GeoJsonBuilder
 
 
   def position_to_array( position )
-    [position[:position][:latitude], position[:position][:longitude] ]
+    [position[:position][:longitude],position[:position][:latitude]]
   end
 
 
