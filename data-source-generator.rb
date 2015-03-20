@@ -25,6 +25,7 @@ class GPSExtractor
   def extract_all_postions
     interpolations
     stats if @print_stats
+    filter_by_tag if @filter_by_tag
     numbering
     cleaning
     return data_extraction
@@ -35,11 +36,11 @@ private
 
   # simple wrapper for exiftool command line tool
   def cmd
-    if !@filter_by_tag
+    #if !@filter_by_tag
       "exiftool -j #{ @directory.map{ |dir| @type_of_file.map{ |type| dir + "/**" + type }.join(' ') }.join(' ')}"
-    else
-      "mdfind 'kMDItemUserTags == #{@filter_by_tag}' | xargs exiftool -j"
-    end
+    #else
+      #"mdfind 'kMDItemUserTags == #{@filter_by_tag}' | xargs exiftool -j"
+    #end
   end
 
 
@@ -91,6 +92,12 @@ private
     puts "Total files:            #{data_extraction.count}"
     puts "Total with no GPSdata:  #{data_extraction.count { |d| d[:position].nil?   } }"
     puts "videos with no GPSdata: #{data_extraction.count { |d| d[:position].nil? && d[:type] == 'MOV' } }"
+  end
+
+
+  def filter_by_tag
+    paths = %x(mdfind 'kMDItemUserTags == #{@filter_by_tag}').split(/\n/)
+    data_extraction.keep_if { |d| paths.include?(d[:path]) }
   end
 
 
@@ -248,7 +255,7 @@ end
 
 
 # search in directory
-positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone",'/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA','/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU'], set_description: false, print_stats: false ).extract_all_postions
+positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone",'/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA','/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU'], filter_by_tag: 'Violet',  set_description: false, print_stats: false ).extract_all_postions
 
 # for search by tag
 #positions = GPSExtractor.new("dummydirectory", set_description: false, print_stats: false, filter_by_tag: 'Violet' ).extract_all_postions
