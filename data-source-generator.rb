@@ -12,7 +12,7 @@ class GPSExtractor
     options[:directory] = [options[:directory]] if options[:directory].is_a? String
     raise ArgumentError, 'you should give at least a directory of a tag' if options[:directory].nil? && options[:filter_by_tag].nil?
     @directory = options[:directory]
-    @type_of_file = options[:type_of_file] || ['JPG','MOV']
+    @type_of_file = options[:type_of_file] || ['JPG','MOV','mp4']
     @set_description = options[:set_description] || false
     @print_stats = options[:print_stats] || false
 
@@ -35,12 +35,13 @@ class GPSExtractor
 private
 
   # simple wrapper for exiftool command line tool
-  def cmd
-    #if !@filter_by_tag
-      "exiftool -j #{ @directory.map{ |dir| @type_of_file.map{ |type| dir + "/**" + type }.join(' ') }.join(' ')}"
-    #else
-      #"mdfind 'kMDItemUserTags == #{@filter_by_tag}' | xargs exiftool -j"
-    #end
+  def extract
+    json = []
+    @directory.map do |dir|
+       cmd = "exiftool -j #{@type_of_file.map{ |type| dir + "/*" + type }.join(' ')}"
+       json += JSON.parse(%x(#{cmd}))
+    end
+    json
   end
 
 
@@ -50,9 +51,14 @@ private
     data_extraction.each_with_index do |p,i|
       if p[:position].nil?
         # find next available position for interpolation
-        increment = 1
-        increment +=1 while data_extraction[i+increment][:position].nil? #|| i + increment <= data_extraction.length
-        p[:position]  = interpolation( p[:created_at] , data_extraction[i-1], data_extraction[i+increment] )
+        begin
+          increment = 1
+          increment +=1 while data_extraction[i+increment][:position].nil?
+          p[:position]  = interpolation( p[:created_at] , data_extraction[i-1], data_extraction[i+increment] )
+        rescue => e
+          p "Unable to interpolate position"
+          p[:position] = nil
+        end
       end
     end
   end
@@ -104,7 +110,8 @@ private
   # extract meaningful information from raw exiftool output
   def data_extraction
     return @data_extraction if @data_extraction
-    json = JSON.parse(%x(#{cmd}))
+    #json = JSON.parse(%x(#{cmd}))
+    json = extract
     @data_extraction = json.map do |j|
       p j if j['CreateDate'].nil?
       {
@@ -255,7 +262,14 @@ end
 
 
 # search in directory
-positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone",'/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA','/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU'], filter_by_tag: 'Violet',  set_description: false, print_stats: false ).extract_all_postions
+positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone-am",
+                                            "/Users/sebastienvian/Desktop/photos-iphone-as"
+                                            "/Users/sebastienvian/Desktop/LA\ BALLADE/**/"
+                                            ],
+                              filter_by_tag: 'Violet',
+                              set_description: false,
+                              print_stats: false
+).extract_all_postions
 
 # for search by tag
 #positions = GPSExtractor.new("dummydirectory", set_description: false, print_stats: false, filter_by_tag: 'Violet' ).extract_all_postions
@@ -266,7 +280,7 @@ videos = positions.select { |p| p[:type] == 'MOV' }
 
 # save videos
 GeoJsonBuilder.new.convert_to_points( videos ,
-  { "marker-color" => "#f86767", "marker-symbol" => "cinema", "marker-size" => "medium"} ).save('./videos.json')
+  { "marker-color" => "#f86767", "marker-symbol" => "cinema", "marker-size" => "medium"} ).save('./front/videos.json')
 
 # save all points
-GeoJsonBuilder.new.convert_to_line_string( images ).save('./images.json')
+#GeoJsonBuilder.new.convert_to_line_string( images ).save('./images.json')
