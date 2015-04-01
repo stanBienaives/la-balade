@@ -7,28 +7,109 @@
 
 
 /*index.html*/
-.header {
-   position: absolute;
-   top: 0px;
-   width: 100vw;
-   line-height: 40px;
+.fixed-panel {
+  position: fixed;
+
+  width: 100%;
+  /* z-index: -1; */
+  top: 0px;
 }
 
-.inner {
-   margin: auto;
+.fixed-panel div {
+  /* position: relative; */
+
+}
+
+.overlay {
+  z-index: -1;
+  height: 100vh;
+  filter: blur(1px);
+
+  background-image: linear-gradient(rgba(19, 3, 3, 1),rgba(13, 1, 1, 0));
+  /* position: fixed; */
+}
+
+.overlay > div {
+  z-index: 100;
+
+}
+
+.overlay div {
+  position: relative;
+
+}
+
+.header {
+   height: 100vh;
+    position: fixed; 
+   z-index: -1;
+   -webkit-filter: blur(2px);
+   top: 0px;
+   width: 100%;
+   background-image: url('../images/globe.jpg');
+   background-size: cover;
+   background-position-y: -200px 
+;
+   /*background-attachment: fixed;*/
+}
+
+.title {
+  margin-top: 25vh;
+  text-align: center;
+  /* vertical-align: middle; */
+  /* z-index: 1000000; */
+  font-size: 80px;
+  line-height: 80px;
+  font-family: Helvetica Neue;
+  font-weight: lighter;
+  color: rgba(190, 160, 63, 0.92);
 }
 
 .logo {
-   float: left;
+   /*float: left;*/
+   display: inline-block;
    border-color: black;
    border-style: solid;
    border-width: 1px;
-   width: 40px;
-   height: 40px;
+   width: 80px;
+   height: 80px;
    border-radius: 50%;
 }
 
 
+p.link {
+    /* -webkit-filter: blur(5px); */
+
+    height: 50px;
+    font-size: 20px;
+    color: rgb(229, 202, 15);
+    text-align: center;
+    line-height: 50px;
+    margin-top: 70px;
+}
+
+p.link > a {
+    -webkit-filter: blur(0px);
+    background-color: rgba(255, 255, 255, 0.62);
+    display: block;
+    width: 100%;
+    border-radius: 2px;
+    height: 100%;
+    color: rgb(148, 125, 59);
+    /* border: 1px solid black; */
+    font-family: Helvetica;
+}
+
+
+
+.content {
+  height: 4000px;
+  background-color: white;
+  z-index: 100000;
+  margin-top: 100vh;
+  box-shadow: 0px -10px rgba(3, 0, 0, 0.26);
+
+}
 
 
 
