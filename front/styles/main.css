@@ -103,11 +103,37 @@ p.link > a {
 
 
 .content {
-  height: 4000px;
-  background-color: white;
-  z-index: 100000;
+  /*height: 4000px;*/
+  /*background-color: rgb(253, 252, 238);*/
+  background-image: url('../images/cream_dust.png');
+  z-index: 10;
   margin-top: 100vh;
   box-shadow: 0px -10px rgba(3, 0, 0, 0.26);
+  position: relative;
+
+  text-align: justify;
+}
+
+.content p {
+  font-family: Helvetica Neue;
+  font-weight: 200;
+  justify-content: space-between; 
+  line-height: 50px;
+  font-size: 20px;
+  width: 100%;
+}
+
+
+.content h1 {
+  margin-top: 100px;
+  margin-bottom: 100px;
+  font-family: Helvetica Neue;
+  font-weight: lighter;
+  line-height: 10px;
+}
+
+.content hr {
+  margin-top: 100px;
 
 }
 
