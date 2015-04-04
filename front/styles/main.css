@@ -25,7 +25,7 @@
   height: 100vh;
   filter: blur(1px);
 
-  background-image: linear-gradient(rgba(19, 3, 3, 1),rgba(13, 1, 1, 0));
+  background-image: linear-gradient(rgba(19, 3, 3, 0.74),rgba(13, 1, 1, 0));
   /* position: fixed; */
 }
 
@@ -48,8 +48,7 @@
    width: 100%;
    background-image: url('../images/globe.jpg');
    background-size: cover;
-   background-position-y: -200px 
-;
+   background-position-y: -200px;
    /*background-attachment: fixed;*/
 }
 
@@ -71,8 +70,8 @@
    border-color: black;
    border-style: solid;
    border-width: 1px;
-   width: 80px;
-   height: 80px;
+   width: 64px;
+   height: 64px;
    border-radius: 50%;
 }
 
@@ -108,7 +107,7 @@ p.link > a {
   background-image: url('../images/cream_dust.png');
   z-index: 10;
   margin-top: 100vh;
-  box-shadow: 0px -10px rgba(3, 0, 0, 0.26);
+  box-shadow: 0px -5px 3px rgba(3, 0, 0, 0.26);
   position: relative;
 
   text-align: justify;
@@ -118,9 +117,31 @@ p.link > a {
   font-family: Helvetica Neue;
   font-weight: 200;
   justify-content: space-between; 
-  line-height: 50px;
+  line-height: 47px;
   font-size: 20px;
   width: 100%;
+}
+
+
+.content img {
+  /* margin-right: 10px; */
+  display: inline-block;
+  margin-right: 0px;
+  margin-left: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+
+  width: 100%;
+}
+
+.content img.fullscreen {
+  height: 100vh;
+  position: fixed;
+  top: 0px;
+  left: 0px;
 }
 
 
