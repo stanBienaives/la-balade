@@ -29,6 +29,7 @@ video.onended = function (e){
 };
 
 
+
 var current_video = 1;
 
 //dynamically add videos to map
@@ -43,6 +44,7 @@ map.featureLayer.on('ready', function(e) {
 
 
     setLayer();
+
     playVideoFromIndex(getCurrentVideo());
 
 
@@ -51,25 +53,40 @@ map.featureLayer.on('ready', function(e) {
 
 //desactivate map centering if user zoom out
 map.on('dragstart', function (  ){
-   
    center_map = false;
 });
 
 
 
+var loadVideo = function ( index ){
+   loader = document.getElementById('loader');
+   loader.src = getPath( index );
+}
+
+
+
+var getPath = function ( video ){
+   //return properties.path
+   return directory + video.name;
+}
 // play video
 var playVideo  = function ( properties ){
   changePinColor( properties.index );
   centerMap( properties.position , properties.index); 
-   startVideo( directory +  properties.name );
+   startVideo( getPath( properties ) );
   //startVideo( properties.path );
   // store current_video in cookie
   setCurrentVideo(properties.index);
 };
 
+
+var getVideoFromIndex = function ( index ){
+  return _.find( raw_data, function ( properties ){ return properties.index == index } );
+};
+
 // read specific video
 var playVideoFromIndex = function ( index ){
-  props  = _.find( raw_data, function ( properties ){ return properties.index == index } );
+  props  = getVideoFromIndex( index );
   playVideo( props );
 };
 
@@ -129,7 +146,7 @@ var centerMap = function ( position, index ){
 
 // play video
 var startVideo = function ( src ){
-   document.querySelector("#video").src = src;
+   document.querySelector("#player").src = src;
 };
 
 var setCurrentVideo = function ( index ){
