@@ -6,6 +6,12 @@
 }
 
 
+#loader {
+   display: none;
+
+}
+
+
 /*index.html*/
 .fixed-panel {
   position: fixed;

@@ -4,191 +4,280 @@
 
 
 //var directory = "/Users/sebastienvian/Desktop/photos-iphone/"
-var directory = "https://s3-eu-west-1.amazonaws.com/la-ballade/videos/"
-
-
-var mapName = 'stanbienaives.l752j3lk'
-
-var map = L.mapbox.map('map', mapName, {
-   accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
-   //inertiaDeceleration: 100000,
-   //inertiaMaxSpeed: 100,
-   
-})
-
-var geoJSON;
-var raw_data;
-
-var center_map = true;
-
-
-var video = document.getElementsByTagName('video')[0];
-
-video.onended = function (e){
-   playNext();
-};
-
-
-
-var current_video = 1;
-
-//dynamically add videos to map
-//map.featureLayer.loadURL('../videos.json').addTo(map);
-
-map.featureLayer.on('ready', function(e) {
-    //document.getElementById('open-popup').onclick = clickButton;
-    // local store raw_datas
-
-    geoJSON = map.featureLayer.toGeoJSON()
-    raw_data = _.map( geoJSON.features , function ( f ){ return f.properties;} );
-
-
-    setLayer();
-
-    playVideoFromIndex(getCurrentVideo());
-
-
-});
-
-
-//desactivate map centering if user zoom out
-map.on('dragstart', function (  ){
-   center_map = false;
-});
-
-
-
-var loadVideo = function ( index ){
-   loader = document.getElementById('loader');
-   loader.src = getPath( index );
+var CONSTS = {
+   directory: "https://s3-eu-west-1.amazonaws.com/la-ballade/videos/",
 }
 
 
 
-var getPath = function ( video ){
-   //return properties.path
-   return directory + video.name;
-}
-// play video
-var playVideo  = function ( properties ){
-  changePinColor( properties.index );
-  centerMap( properties.position , properties.index); 
-   startVideo( getPath( properties ) );
-  //startVideo( properties.path );
-  // store current_video in cookie
-  setCurrentVideo(properties.index);
+
+/////////////////////////////
+//       Player
+////////////////////////////
+
+var Player = function (){
+   this.init.apply(this, arguments);
 };
 
+Player.prototype = {
+   init: function () {
+      this.initPlayer();
+      this.initLoader();
 
-var getVideoFromIndex = function ( index ){
-  return _.find( raw_data, function ( properties ){ return properties.index == index } );
-};
+   },
+   initPlayer: function (){
+      this._player = document.getElementById('player');
 
-// read specific video
-var playVideoFromIndex = function ( index ){
-  props  = getVideoFromIndex( index );
-  playVideo( props );
-};
+      this._player.onended = function (e){
+         controller.next();
+      }
+   },
+   initLoader: function (){
+      this._loader = document.getElementById('loader');
 
+   },
 
-// read next
-var playNext = function (){
-   current_video++;
-   playVideoFromIndex( current_video );
-};
+   loadVideo: function ( index ){
+      this._loader.src = videos.getPath( index );
+      // fuck this shit!
+      //this._loader.addEventListener('canplaythrough', function (){
+         //videos.markAsLoaded( controller.current + 1 );
+         //console.log('almost fully loader');
+      //});
+   },
 
-
-// center map 
-var centerMap = function ( position, index ){
-   if( !center_map ) {
-      return;
+   playVideo: function ( video ){
+     this._player.src = videos.getPath( video );
+     this.loadVideo( video.index + 1 );
    }
-   ( position.latitude )? position.lat = position.latitude : null;
-   ( position.longitude )? position.lon = position.longitude : null;
-   // fit map to last two points then zoom in
-   if( !!index && index !== 1 ) {
-      previous_position = _.find( raw_data, function( d ) { return d.index == index - 1; } );
-      previous_position = previous_position.position;
-      console.log( previous_position );
-      //map.setZoom(30);
-      if ( !!previous_position ) {
-         ( previous_position.latitude )? previous_position.lat = previous_position.latitude : null;
-         ( previous_position.longitude )? previous_position.lon = previous_position.longitude : null;
-         var bounds = [ position, previous_position];
-         console.log( bounds );
 
-         // if the targe pin is inside the bounds then simply center it
-         if(  map.getBounds().contains( [position.lat, position.lon] ) && map.getZoom() >= 10 ) {
-            map.panTo( position, {
-               animate: true,
-               duration: 1
-            });
-         } else {
-            // do not fit if distance between points is too small
-            map.fitBounds(bounds, { 
-               paddingTopLeft: [ 40, 400 ],
-               animate: true,
-               duration: 1,
-               zoom: {
+}
+
+
+/////////////////////////////////////
+//     DataSource 
+/////////////////////////////////////
+
+var VideoDataSource = function() {};
+VideoDataSource.prototype = {
+   all: function (){
+      return this._raw_data;
+   },
+   init: function ( geoJSON ){
+      // this should not be here..
+      this._raw_data =  _.map( geoJSON.features , function ( f ){ return f.properties;} );
+
+   },
+   findByIndex: function ( index ){
+      return _.find( this._raw_data, function ( properties ){ return properties.index == index } );
+   },
+
+   getPath: function( index_or_video ) {
+      var video = ( !!index_or_video.index )? index_or_video : this.findByIndex( index_or_video );
+      return CONSTS.directory + video.name;
+   },
+
+   markAsLoaded: function ( index ){
+      this.findByIndex( controller.current + 1 ).loaded = true;
+   }
+   
+}
+
+
+//////////////////////////////
+//      Controller
+/////////////////////////////
+var Controller = function (){
+   this.init.apply(this, arguments);
+};
+Controller.prototype = {
+   current: 1,
+   init: function() {
+      this.player = new Player();
+      this.map = new Map( function ( geoJSON ){
+          videos.init( geoJSON );
+          this.play();
+      }.bind( this ));
+   },
+
+   play: function ( index ){
+     if( !index ) { 
+        index = this._getCurrent();
+     }
+     var video = videos.findByIndex( index );
+     this._setCurrent(video.index);
+
+     this.player.playVideo( video );
+     this.map.highlight( video );
+   },
+
+   next: function (){
+      this.current++;
+      this.play();
+   },
+
+   pause: function (){},
+
+   _setCurrent: function ( index ){
+      this.current = index;
+      // still to be tested
+      document.cookie = 'last_read_video='+ index;
+      console.log( document.cookie );
+   },
+
+   _getCurrent: function (){
+      if( current != 1 ) {
+         return current;
+      }
+      // try to get current from cookie
+      var cookie = document.cookie
+      if ( cookie !== '' ) {
+         return cookie.split('=')[1];
+      } else {
+         return current;
+      }
+   }
+
+};
+
+
+
+
+
+
+/////////////////////////////////
+//       Map
+////////////////////////////////
+
+var Map = function (){
+   this.init.apply(this, arguments);
+};
+
+Map.prototype =  {
+   mapName: 'stanbienaives.l752j3lk',
+   accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
+   center_map: true,
+   init: function( cb ) {
+
+      // initializing map
+      this._map = L.mapbox.map.call( this, 'map', this.mapName, {
+         accessToken: this.accessToken
+         //inertiaDeceleration: 100000,
+         //inertiaMaxSpeed: 100,
+      })
+
+
+      // Retrive geoJSON from mapbox when ready
+      // TODO: better tu fill up from url?: https://www.mapbox.com/mapbox.js/example/v1.0.0/geojson-marker-from-url/
+      this._map.featureLayer.on('ready', function(e) {
+
+          this.geoJSON = this._map.featureLayer.toGeoJSON()
+          this.setLayer();
+          cb( this.geoJSON );
+
+      }.bind(this));
+
+      //desactivate map centering if user zoom out
+      this._map.on('dragstart', function () {
+
+         this.center_map = false;
+
+      }.bind(this));
+   },
+   setLayer: function () {
+
+      if( !!this.geoJSON ) {
+         this._map.featureLayer.setGeoJSON( this.geoJSON );
+      }
+      this._map.featureLayer.eachLayer(function(marker) {
+
+        marker.on('click', function ( e ){
+           console.log('clicked');
+           console.log( marker.feature.properties.name );
+           controller.play( marker.feature.properties.index );
+           this.center_map = true;
+        });
+
+      });
+
+   },
+
+
+   highlight: function( video ) {
+     this._changePinColor( video.index );
+     this._centerMap( video.position , video.index); 
+   },
+
+   _changePinColor: function ( index ){
+
+      _.each( this.geoJSON.features , function ( f ){
+         f.properties['marker-color'] = '#bbb'
+         f.properties['marker-size'] = 'medium'
+         if( f.properties.index == index ) {
+            f.properties['marker-color'] = '#ff8888'
+            f.properties['marker-size'] = 'large'
+         }
+      });
+      this.setLayer( this.geoJSON );
+   },
+
+   _centerMap: function ( position, index ){
+      //if( !this.center_map ) {
+         //return;
+      //}
+      ( position.latitude )? position.lat = position.latitude : null;
+      ( position.longitude )? position.lon = position.longitude : null;
+      // fit map to last two points then zoom in
+      if( !!index && index !== 1 ) {
+         var previous_position = videos.findByIndex( index - 1 );
+         previous_position = previous_position.position;
+         //map.setZoom(30);
+         if ( !!previous_position ) {
+            ( previous_position.latitude )? previous_position.lat = previous_position.latitude : null;
+            ( previous_position.longitude )? previous_position.lon = previous_position.longitude : null;
+            var bounds = [ position, previous_position];
+
+            // if the targe pin is inside the bounds then simply center it
+            if(  this._map.getBounds().contains( [position.lat, position.lon] ) && this._map.getZoom() >= 10 ) {
+               this._map.panTo( position, {
                   animate: true,
                   duration: 1
-               },
-               //pan: {
-                  //animate: true,
-                  //duration: 1
-               //}
-            });
+               });
+            } else {
+               // do not fit if distance between points is too small
+               this._map.fitBounds(bounds, {
+                  paddingTopLeft: [ 400, 40 ],
+                  animate: true,
+                  duration: 1000,
+                  //zoom: {
+                     //animate: true,
+                     //duration: 1
+                  //},
+                  //pan: {
+                     //animate: true,
+                     //duration: 1
+                  //}
+               });
+               console.log( 'fitted' );
+            }
          }
       }
-   } 
-};
-
-
-// play video
-var startVideo = function ( src ){
-   document.querySelector("#player").src = src;
-};
-
-var setCurrentVideo = function ( index ){
-  current_video = index;
-  document.cookie = 'last_read_video='+ index;
-  console.log( document.cookie );
-};
-
-var getCurrentVideo = function ( index ){
-   var cookie = document.cookie
-   console.log( cookie );
-   if ( cookie !== '' ) {
-      return cookie.split('=')[1];
-   } else {
-      return current_video;
    }
-};
-
-var changePinColor = function ( index ){
-   _.each( geoJSON.features , function ( f ){
-      f.properties['marker-color'] = '#bbb'
-      f.properties['marker-size'] = 'medium'
-      if( f.properties.index == index ) {
-         f.properties['marker-color'] = '#ff8888'
-         f.properties['marker-size'] = 'large'
-      }
-   });
-   setLayer( geoJSON );
 }
 
-var setLayer = function ( geoJSON ){
-   if( !!geoJSON ) {
-      map.featureLayer.setGeoJSON( geoJSON );
-   }
-   map.featureLayer.eachLayer(function(marker) {
-     marker.on('click', function ( e ){
-        console.log('clicked');
-        console.log( marker.feature.properties.name );
-        playVideo( marker.feature.properties );
-        center_map = true;
-     });
-   });
 
-}
+
+
+/////////////////////////////////
+//     initializing
+/////////////////////////////////
+
+
+var videos = new VideoDataSource();
+var controller = new Controller();
+
+
+
+
+
 
