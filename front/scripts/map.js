@@ -29,7 +29,15 @@ Player.prototype = {
       this._player = document.getElementById('player');
 
       this._player.onended = function (e){
+         spinner.show();
          controller.next();
+      }
+      this._player.onplaying = function (e) {
+         spinner.hide();
+      }
+
+      this._player.onwaiting = function ( e ){
+         spinner.show();
       }
    },
    initLoader: function (){
@@ -37,18 +45,45 @@ Player.prototype = {
 
    },
 
-   loadVideo: function ( index ){
+   loadVideo: function ( index, cb ){
       this._loader.src = videos.getPath( index );
-      // fuck this shit!
-      //this._loader.addEventListener('canplaythrough', function (){
-         //videos.markAsLoaded( controller.current + 1 );
-         //console.log('almost fully loader');
-      //});
+
+      // oncanplaythrough is not restrictive enought we would like the playing to start when the whole video is loaded.. 
+      // onprogress looks like a better solution ( > 0.99 ) but cannot make it work... still digging
+      this._loader.oncanplaythrough = cb
+      //this._loader.onprogress = function (e) {
+         //if( this.buffered.length === 0 ) {
+            //return;
+         //}
+         //var ratio = this.buffered.end( this.buffered.length - 1 ) / this.duration;
+         //console.log(ratio, 'loaded');
+         //if( ratio > 0.9 ) {
+            //console.log(' 90% loaded');
+            //cb();
+            //this.onprogress = null
+         //}
+      //}
    },
 
    playVideo: function ( video ){
-     this._player.src = videos.getPath( video );
-     this.loadVideo( video.index + 1 );
+     if( video.loaded ) {
+        this._player.src = videos.getPath( video );
+        this.loadVideo( video.index + 1 );
+     } else {
+        // loadVideo with cb
+        this.loadVideo( video.index , function (e){
+
+           console.log('ok loaded');
+           video.loaded = true;
+           this.playVideo( video );
+           
+        }.bind(this));
+     }
+   },
+
+   clear: function () {
+      this._player.src = "";
+      this._loader.src = "";
    }
 
 }
@@ -103,6 +138,8 @@ Controller.prototype = {
    play: function ( index ){
      if( !index ) { 
         index = this._getCurrent();
+     } else {
+        this.player.clear();
      }
      var video = videos.findByIndex( index );
      this._setCurrent(video.index);
@@ -126,15 +163,15 @@ Controller.prototype = {
    },
 
    _getCurrent: function (){
-      if( current != 1 ) {
-         return current;
+      if( this.current != 1 ) {
+         return this.current;
       }
       // try to get current from cookie
       var cookie = document.cookie
       if ( cookie !== '' ) {
          return cookie.split('=')[1];
       } else {
-         return current;
+         return this.current;
       }
    }
 
@@ -222,9 +259,9 @@ Map.prototype =  {
    },
 
    _centerMap: function ( position, index ){
-      //if( !this.center_map ) {
-         //return;
-      //}
+      if( !this.center_map ) {
+         return;
+      }
       ( position.latitude )? position.lat = position.latitude : null;
       ( position.longitude )? position.lon = position.longitude : null;
       // fit map to last two points then zoom in
@@ -267,17 +304,36 @@ Map.prototype =  {
 
 
 
+////////////////////////////////
+//     loader
+///////////////////////////////
+var Loader = function (){
+   this.init.apply(this,arguments);
+}
+
+Loader.prototype = {
+   init: function() {
+      this._spinner = document.getElementById('spinner');
+      this.show();
+   },
+
+   show: function (){
+      this._spinner.style.display = 'block';
+   },
+
+   hide: function (){
+      this._spinner.style.display = 'none';
+   }
+}
+
+
+
 
 /////////////////////////////////
 //     initializing
 /////////////////////////////////
 
 
+var spinner = new Loader();
 var videos = new VideoDataSource();
 var controller = new Controller();
-
-
-
-
-
-

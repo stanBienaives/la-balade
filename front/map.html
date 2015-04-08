@@ -9,8 +9,11 @@
 
    </head>
    <body>
-      <div id='map'>
-      </div>
+      <!--map-->
+      <div id='map'> </div>
+
+
+      <!--player-->
       <video id='player' width="620"  controls  autoplay style="position:fixed;top:20px;left:20px">
         <source src="" type="video/mp4">
         <!--<source src="movie.ogg" type="video/ogg">-->
@@ -21,6 +24,14 @@
         <!--<source src="movie.ogg" type="video/ogg">-->
         Your browser does not support the video tag.
       </video>
+
+      <!--loader-->
+      <div class='spinner-container' id='spinner'>
+        <div class='spinner' >loading</div>
+      </div>
+
+
+
       <footer>
         <script src='https://api.tiles.mapbox.com/mapbox.js/v2.1.6/mapbox.js'></script>
         <script src='scripts/underscore-min.js'></script>
