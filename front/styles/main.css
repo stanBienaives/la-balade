@@ -8,15 +8,16 @@
 
 #loader {
    display: none;
-
 }
 
 
-#player {
+
+.floating {
    position: fixed;
-   top: 20px;
-   left: 20px;
-   width: 50%;
+   top: 2%;
+   left: 2%;
+   width: 98%;
+   max-width: 600px;
 }
 
 
@@ -175,24 +176,25 @@ p.link > a {
 /*spinner - creadit projects.lukehaas.me */
 
 .spinner-container {
-   position: absolute;
-   top: 70px;
-   left: 250px;
+   margin: 6em auto;
+   /*position: absolute;*/
+   /*top: 70px;*/
+   /*left: 250px;*/
    z-index: 10000;
-   /*background: blue;*/
+   /* background: blue; */
 
 }
 
 
 .spinner {
-  margin: 6em auto;
+  margin: auto;
   font-size: 10px;
   position: relative;
   text-indent: -9999em;
-  border-top: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-right: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1.1em solid rgba(255, 255, 255, 0.2);
-  border-left: 1.1em solid #ffffff;
+  border-top: 1.1em solid rgba(255, 255, 255, 0);
+  border-right: 1.1em solid rgba(255, 255, 255, 0.5);
+  border-bottom: 1.1em solid rgba(255, 255, 255, 0);
+  border-left: 1.1em solid rgba(255, 255, 255, 0.5);
   -webkit-transform: translateZ(0);
   -ms-transform: translateZ(0);
   transform: translateZ(0);
