@@ -28,11 +28,11 @@ Player.prototype = {
    initPlayer: function (){
       this._player = document.getElementById('player');
 
-      this._player.onended = function (e){
+      this._player.onended = function ( e ){
          spinner.show();
          controller.next();
       }
-      this._player.onplaying = function (e) {
+      this._player.onplaying = function ( e ) {
          spinner.hide();
       }
 
@@ -48,21 +48,35 @@ Player.prototype = {
    loadVideo: function ( index, cb ){
       this._loader.src = videos.getPath( index );
 
-      // oncanplaythrough is not restrictive enought we would like the playing to start when the whole video is loaded.. 
+      // oncanplaythrough is not restrictive enought we would like the playing to start when the whole video is loaded..
       // onprogress looks like a better solution ( > 0.99 ) but cannot make it work... still digging
-      this._loader.oncanplaythrough = cb
-      //this._loader.onprogress = function (e) {
-         //if( this.buffered.length === 0 ) {
-            //return;
-         //}
-         //var ratio = this.buffered.end( this.buffered.length - 1 ) / this.duration;
-         //console.log(ratio, 'loaded');
-         //if( ratio > 0.9 ) {
-            //console.log(' 90% loaded');
-            //cb();
-            //this.onprogress = null
-         //}
-      //}
+      //this._loader.oncanplaythrough = cb
+      this._loader.onloadeddata = function ( e ){
+         //Check if videos is fully loaded ( already in the cache ) in this case the onprogress event won't be triggered. #IhateHTML5VideoAPI
+         var isFullyLoaded =  ( this.buffered.length > 0 )  && ( this.buffered.end( this.buffered.length - 1 ) == this.duration );
+         if ( !isFullyLoaded ) {
+            return;
+         } else {
+            this.onprogress = null;
+            console.log('fully loaded');
+            cb();
+         }
+      }
+
+
+      this._loader.onprogress = function (e) {
+         if( this.buffered.length > 0 ) {
+            var ratio = this.buffered.end( this.buffered.length - 1 ) / this.duration;
+            //console.log(ratio, 'loaded');
+            if( ratio > 0.95 ) {
+               console.log(' 95% loaded');
+               cb();
+               // Is this dangerous?
+               this.onprogress = null
+               this.onloadeddata = null
+            }
+         }
+      }
    },
 
    playVideo: function ( video ){
@@ -73,10 +87,10 @@ Player.prototype = {
         // loadVideo with cb
         this.loadVideo( video.index , function (e){
 
-           console.log('ok loaded');
+           //console.log('ok loaded');
            video.loaded = true;
            this.playVideo( video );
-           
+
         }.bind(this));
      }
    },
@@ -176,10 +190,6 @@ Controller.prototype = {
    }
 
 };
-
-
-
-
 
 
 /////////////////////////////////
