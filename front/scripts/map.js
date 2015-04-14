@@ -59,7 +59,7 @@ Player.prototype = {
          } else {
             this.onprogress = null;
             console.log('fully loaded');
-            cb();
+            ( !!cb )? cb() : null;
          }
       }
 
@@ -70,7 +70,7 @@ Player.prototype = {
             //console.log(ratio, 'loaded');
             if( ratio > 0.95 ) {
                console.log(' 95% loaded');
-               cb();
+               ( !!cb )? cb() : null;
                // Is this dangerous?
                this.onprogress = null
                this.onloadeddata = null
