@@ -167,7 +167,8 @@ p.link > a {
   margin-bottom: 100px;
   font-family: Helvetica Neue;
   font-weight: lighter;
-  line-height: 10px;
+  /* line-height: 10px; */
+  text-align: left;
 }
 
 .content hr {
@@ -228,5 +229,13 @@ p.link > a {
     -webkit-transform: rotate(360deg);
     transform: rotate(360deg);
   }
+}
+
+
+@media  screen and (max-width: 700px) {
+   .header {
+      background-position-y: inherit;
+   }
+
 }
 
