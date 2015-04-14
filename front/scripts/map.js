@@ -8,6 +8,64 @@ var CONSTS = {
    directory: "https://s3-eu-west-1.amazonaws.com/la-ballade/videos/",
 }
 
+///////////////////////////////
+// Helpers
+//////////////////////////////
+
+// Find space within viewport that is not covered by the player ( to fit the map accordingly )
+
+Element.prototype.getElementWidth = function() {
+   if (typeof this.clip !== "undefined") {
+      return this.clip.width;
+   } else {
+      if (this.style.pixelWidth) {
+         return this.style.pixelWidth;
+      } else {
+         return this.offsetWidth;
+      }
+   }
+};
+Element.prototype.getElementHeight = function() {
+   if (typeof this.clip !== "undefined") {
+      return this.clip.height;
+   } else {
+      if (this.style.pixelHeight) {
+         return this.style.pixelHeight;
+      } else {
+         return this.offsetHeight;
+      }
+}
+};
+
+var getPlayerOffset = function (  ){
+   var safeMargin = 20;
+   var position = {
+      //width: document.getElementById('player').offsetWidth,
+      //height: document.getElementById('player').offsetHeight
+      width: document.getElementById('player').getElementWidth() + safeMargin,
+      height: document.getElementById('player').getElementHeight() + safeMargin
+   }
+   var overall  = {
+      width: window.innerWidth,
+      height: window.innerHeight
+   }
+
+
+   var offset = {
+      right: overall.width - position.width,
+      bottom: overall.height - position.height
+   }
+
+   if ( offset.right > offset.bottom ) {
+      console.log('diplay right');
+      return [ position.width , 0 ];
+   } else {
+      console.log('display below');
+      return [ 0 , position.height ];
+   }
+
+}
+
 
 
 
@@ -252,7 +310,7 @@ Map.prototype =  {
 
    highlight: function( video ) {
      this._changePinColor( video.index );
-     this._centerMap( video.position , video.index); 
+     this._centerMap( video.position , video.index);
    },
 
    _changePinColor: function ( index ){
@@ -293,7 +351,7 @@ Map.prototype =  {
             } else {
                // do not fit if distance between points is too small
                this._map.fitBounds(bounds, {
-                  paddingTopLeft: [ 400, 40 ],
+                  paddingTopLeft: getPlayerOffset(),
                   animate: true,
                   duration: 1000,
                   //zoom: {
