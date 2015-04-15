@@ -12,8 +12,16 @@ var CONSTS = {
 // Helpers
 //////////////////////////////
 
-// Find space within viewport that is not covered by the player ( to fit the map accordingly )
 
+// panToOffset: credit: https://gist.github.com/missinglink/7620340
+L.Map.prototype.panToOffset = function (latlng, offset, options) {
+    var x = this.latLngToContainerPoint(latlng).x - offset[0] / 2
+    var y = this.latLngToContainerPoint(latlng).y - offset[1] / 2
+    var point = this.containerPointToLatLng([x, y])
+    return this.setView(point, this._zoom, { pan: options })
+}
+
+// cross browser getWidth: credit: 
 Element.prototype.getElementWidth = function() {
    if (typeof this.clip !== "undefined") {
       return this.clip.width;
@@ -343,8 +351,12 @@ Map.prototype =  {
             var bounds = [ position, previous_position];
 
             // if the targe pin is inside the bounds then simply center it
-            if(  this._map.getBounds().contains( [position.lat, position.lon] ) && this._map.getZoom() >= 10 ) {
-               this._map.panTo( position, {
+            if(  this._map.getBounds().contains( [position.lat, position.lon] ) && this._map.getZoom() >= 5 ) {
+               //this._map.panTo( position, {
+                  //animate: true,
+                  //duration: 1
+               //});
+               this._map.panToOffset( position, getPlayerOffset(), {
                   animate: true,
                   duration: 1
                });
