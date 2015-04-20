@@ -39,7 +39,11 @@ private
     json = []
     @directory.map do |dir|
        cmd = "exiftool -j #{@type_of_file.map{ |type| dir + "/*" + type }.join(' ')}"
-       json += JSON.parse(%x(#{cmd}))
+       begin
+         json += JSON.parse(%x(#{cmd}))
+       rescue
+         next
+       end
     end
     json
   end
@@ -113,18 +117,23 @@ private
     #json = JSON.parse(%x(#{cmd}))
     json = extract
     @data_extraction = json.map do |j|
-      p j if j['CreateDate'].nil?
-      {
-        position: coordinate_decimal( j["GPSPosition"]),
-        created_at: convert_proper_date_format( j["CreateDate"] ),
-        name: j['FileName'],
-        path: j["Directory"] + '/' + j['FileName'],
-        type: j['FileType'],
-        id: j['FileName'], # identifier will be the filename
-        description: description_from_coordinates( coordinate_decimal( j["GPSPosition"]) ),
-        altitude: j['GPSAltitude']
-      }
+      begin
+        {
+          position: coordinate_decimal( j["GPSPosition"]),
+          created_at: convert_proper_date_format( j["CreateDate"] ),
+          name: j['FileName'],
+          path: j["Directory"] + '/' + j['FileName'],
+          type: j['FileType'],
+          id: j['FileName'], # identifier will be the filename
+          description: description_from_coordinates( coordinate_decimal( j["GPSPosition"]) ),
+          altitude: j['GPSAltitude']
+        }
+      rescue
+         nil
+      end
     end
+
+    @data_extraction.reject!(&:nil?)
   end
 
 
@@ -134,8 +143,8 @@ private
     return nil if raw_data.nil?
     longitude = raw_data.split(', ')[1]
     latitude = raw_data.split(', ')[0]
-    latitude  =  latitude.match /([0-9]{1,2}) deg ([0-9]{1,2})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
-    longitude =  longitude.match /([0-9]{1,2}) deg ([0-9]{1,2})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
+    latitude  =  latitude.match /([0-9]{1,3}) deg ([0-9]{1,3})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
+    longitude =  longitude.match /([0-9]{1,3}) deg ([0-9]{1,3})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
     {
       latitude: convert_polar_to_sign(  latitude[4]  ) * convert_sexadecimal( latitude[1], latitude[2] , latitude[3]),
       longitude: convert_polar_to_sign( longitude[4]) * convert_sexadecimal( longitude[1], longitude[2] , longitude[3])
@@ -262,9 +271,41 @@ end
 
 
 # search in directory
-positions = GPSExtractor.new( directories: ["/Users/sebastienvian/Desktop/photos-iphone-am",
-                                            "/Users/sebastienvian/Desktop/photos-iphone-as"
-                                            "/Users/sebastienvian/Desktop/LA\ BALLADE/**/"
+positions = GPSExtractor.new( directories: ['/Users/sebastienvian/Desktop/photos-iphone-as',
+                                            '/Users/sebastienvian/Desktop/photos-iphone-am',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150101\ PARIS',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150107\ BUENOS\ AIRES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150110\ SAN\ IGNACIO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150116\ EL\ CARMEN',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150118\ PURMAMARCA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150119\ TILCARA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150120\ PUMA\ MAKA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150121\ AUTREPART',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150122\ EL\ QUIACA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150123\ VILLAZON',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150124\ TUPIZA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150126\ SUD\ JUJU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150126\ SUD\ LIPEZ',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150204\ POTOSI',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150206\ SUCRE',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150212\ ORURO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150214\ LA\ PAZ',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150219\ HUYANA\ POTOSI',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150224\ COPACABANA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150225\ ISLA\ DEL\ SOL',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150228\ PUNO\ ISLA\ UROS',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150304\ AGUAS\ CALIENTES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150306\ CUZCO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150308\ TREK\ SALKANTAY\ +\ MACHU\ PICHU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150315\ LIMA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150318\ SANTIAGO_VALPARAISO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150324\ SYDNEY',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150327\ JERVIS\&CO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150401\ PHILIPPINES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/Philippines\ 2'
+
                                             ],
                               filter_by_tag: 'Violet',
                               set_description: false,
