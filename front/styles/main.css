@@ -178,6 +178,20 @@ p.link > a {
 
 /*spinner - creadit projects.lukehaas.me */
 
+.index {
+  margin: 50px 0px 50px 0px;
+  line-height: 48px;
+  font-size: 20px;
+  font-family: Helvetica Neue;
+}
+
+.index ul {
+  padding-left: 0px;
+}
+.index li {
+    list-style-type: none;
+}
+
 .spinner-container {
    margin: 6em auto;
    /*position: absolute;*/
@@ -185,7 +199,6 @@ p.link > a {
    /*left: 250px;*/
    z-index: 10000;
    /* background: blue; */
-
 }
 
 

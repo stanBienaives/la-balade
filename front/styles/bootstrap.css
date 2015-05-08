@@ -296,7 +296,7 @@ table {
      -moz-box-sizing: border-box;
           
   box-sizing: border-box;
-  z-index: -1;
+  /* z-index: -1; */
   /* position: fixed; */
 }
 
@@ -323,14 +323,14 @@ textarea {
 }
 
 a {
-  color: #428bca;
+  color: #CDC539;
   text-decoration: none;
 }
 
 a:hover,
 a:focus {
-  color: #2a6496;
-  text-decoration: underline;
+  color: #000406;
+  /* text-decoration: underline; */
 }
 
 a:focus {
