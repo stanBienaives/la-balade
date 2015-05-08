@@ -1,3 +1,61 @@
+.content {
+  /*height: 4000px;*/
+  /*background-color: rgb(253, 252, 238);*/
+  background-image: url('../images/cream_dust.png');
+  z-index: 10;
+  margin-top: 100vh;
+  box-shadow: 0px -5px 3px rgba(3, 0, 0, 0.26);
+  position: relative;
+
+  text-align: justify;
+}
+
+.content p {
+  font-family: Helvetica Neue;
+  font-weight: 200;
+  justify-content: space-between; 
+  line-height: 47px;
+  font-size: 20px;
+  width: 100%;
+}
+
+
+.content img {
+  /* margin-right: 10px; */
+  display: inline-block;
+  margin-right: 0px;
+  margin-left: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+
+  width: 100%;
+}
+
+.content img.fullscreen {
+  height: 100vh;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+
+
+.content h1 {
+  margin-top: 100px;
+  margin-bottom: 100px;
+  font-family: Helvetica Neue;
+  font-weight: lighter;
+  /* line-height: 10px; */
+  text-align: left;
+}
+
+.content hr {
+  margin-top: 100px;
+
+}
+
 /*map.html*/
 #map {
    height: 100vh;
@@ -117,64 +175,6 @@ p.link > a {
 }
 
 
-
-.content {
-  /*height: 4000px;*/
-  /*background-color: rgb(253, 252, 238);*/
-  background-image: url('../images/cream_dust.png');
-  z-index: 10;
-  margin-top: 100vh;
-  box-shadow: 0px -5px 3px rgba(3, 0, 0, 0.26);
-  position: relative;
-
-  text-align: justify;
-}
-
-.content p {
-  font-family: Helvetica Neue;
-  font-weight: 200;
-  justify-content: space-between; 
-  line-height: 47px;
-  font-size: 20px;
-  width: 100%;
-}
-
-
-.content img {
-  /* margin-right: 10px; */
-  display: inline-block;
-  margin-right: 0px;
-  margin-left: 0px;
-  padding-left: 0px;
-  padding-right: 0px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-
-
-  width: 100%;
-}
-
-.content img.fullscreen {
-  height: 100vh;
-  position: fixed;
-  top: 0px;
-  left: 0px;
-}
-
-
-.content h1 {
-  margin-top: 100px;
-  margin-bottom: 100px;
-  font-family: Helvetica Neue;
-  font-weight: lighter;
-  /* line-height: 10px; */
-  text-align: left;
-}
-
-.content hr {
-  margin-top: 100px;
-
-}
 
 /*spinner - creadit projects.lukehaas.me */
 
