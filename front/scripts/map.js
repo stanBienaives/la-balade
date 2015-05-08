@@ -22,6 +22,7 @@ L.Map.prototype.panToOffset = function (latlng, offset, options) {
 }
 
 // cross browser getWidth: credit:
+>>>>>>> a2e8d5a2228cdf2609f6793c5b846a30c8496328
 Element.prototype.getElementWidth = function() {
    if (typeof this.clip !== "undefined") {
       return this.clip.width;
