@@ -26,8 +26,8 @@ class GPSExtractor
     interpolations
     stats if @print_stats
     filter_by_tag if @filter_by_tag
-    numbering
     cleaning
+    numbering
     return data_extraction
   end
 
@@ -271,40 +271,42 @@ end
 
 
 # search in directory
-positions = GPSExtractor.new( directories: ['/Users/sebastienvian/Desktop/photos-iphone-as',
+positions = GPSExtractor.new( directories: ['/Users/sebastienvian/Desktop/selection-videos',
+                                            '/Users/sebastienvian/Desktop/photos-iphone-as',
+                                            '/Users/sebastienvian/Desktop/photos-iphone-as-2',
                                             '/Users/sebastienvian/Desktop/photos-iphone-am',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150101\ PARIS',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150107\ BUENOS\ AIRES',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150110\ SAN\ IGNACIO',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150112\ IGUAZU',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150115\ SALTA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150116\ EL\ CARMEN',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150118\ PURMAMARCA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150119\ TILCARA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150120\ PUMA\ MAKA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150121\ AUTREPART',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150122\ EL\ QUIACA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150123\ VILLAZON',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150124\ TUPIZA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150126\ SUD\ JUJU',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150126\ SUD\ LIPEZ',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150204\ POTOSI',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150206\ SUCRE',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150212\ ORURO',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150214\ LA\ PAZ',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150219\ HUYANA\ POTOSI',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150224\ COPACABANA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150225\ ISLA\ DEL\ SOL',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150228\ PUNO\ ISLA\ UROS',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150304\ AGUAS\ CALIENTES',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150306\ CUZCO',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150308\ TREK\ SALKANTAY\ +\ MACHU\ PICHU',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150315\ LIMA',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150318\ SANTIAGO_VALPARAISO',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150324\ SYDNEY',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150327\ JERVIS\&CO',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/150401\ PHILIPPINES',
-                                            '/Users/sebastienvian/Desktop/LA\ BALLADE/Philippines\ 2'
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150101\ PARIS',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150107\ BUENOS\ AIRES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150110\ SAN\ IGNACIO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150112\ IGUAZU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150115\ SALTA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150116\ EL\ CARMEN',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150118\ PURMAMARCA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150119\ TILCARA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150120\ PUMA\ MAKA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150121\ AUTREPART',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150122\ EL\ QUIACA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150123\ VILLAZON',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150124\ TUPIZA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150126\ SUD\ JUJU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150126\ SUD\ LIPEZ',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150204\ POTOSI',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150206\ SUCRE',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150212\ ORURO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150214\ LA\ PAZ',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150219\ HUYANA\ POTOSI',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150224\ COPACABANA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150225\ ISLA\ DEL\ SOL',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150228\ PUNO\ ISLA\ UROS',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150304\ AGUAS\ CALIENTES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150306\ CUZCO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150308\ TREK\ SALKANTAY\ +\ MACHU\ PICHU',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150315\ LIMA',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150318\ SANTIAGO_VALPARAISO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150324\ SYDNEY',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150327\ JERVIS\&CO',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/150401\ PHILIPPINES',
+                                            '/Users/sebastienvian/Desktop/LA\ BALADE/Philippines\ 2'
 
                                             ],
                               filter_by_tag: 'Violet',
@@ -317,7 +319,7 @@ positions = GPSExtractor.new( directories: ['/Users/sebastienvian/Desktop/photos
 
 #positions = GPSExtractor.new(".", set_description: false, print_stats: true, type_of_file: ['.MOV'] ).extract_all_postions
 images = positions.select { |p| true  }
-videos = positions.select { |p| p[:type] == 'MOV' }
+videos = positions.select { |p| ['MOV','MP4'].include? p[:type]  }
 
 # save videos
 GeoJsonBuilder.new.convert_to_points( videos ,
