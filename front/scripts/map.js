@@ -45,6 +45,9 @@ Element.prototype.getElementHeight = function() {
 }
 };
 
+//cookie reader. credit: http://stackoverflow.com/users/311572/jeffery-to
+var readCookie = function (n) {return(n=new RegExp('(?:^|;\\s*)'+(''+n).replace(/[-[\]{}()*+?.,\\^$|#\s]/g,'\\$&')+'=([^;]*)').exec(document.cookie))&&n[1];}
+
 var getPlayerOffset = function (  ){
    var safeMargin = 20;
    var position = {
@@ -109,6 +112,19 @@ Player.prototype = {
    initLoader: function (){
       this._loader = document.getElementById('loader');
 
+       setInterval( function (){
+         if( this.buffered.length > 0 ) {
+            var ratio = this.buffered.end( this.buffered.length - 1 ) / this.duration;
+            //console.log(ratio, 'loaded');
+            if( ratio > 0.99 ) {
+               console.log(' 99% loaded');
+               if(  !!this.onallloaded ) {
+                  this.onallloaded();
+                  this.onallloaded = null;
+               }
+            }
+         }
+       }.bind(this._loader), 500 )
    },
 
    loadVideo: function ( index, cb ){
@@ -116,49 +132,44 @@ Player.prototype = {
 
       // oncanplaythrough is not restrictive enought we would like the playing to start when the whole video is loaded..
       // onprogress looks like a better solution ( > 0.99 ) but cannot make it work... still digging
-      //this._loader.oncanplaythrough = cb
-      this._loader.onloadeddata = function ( e ){
-         //Check if videos is fully loaded ( already in the cache ) in this case the onprogress event won't be triggered. #IhateHTML5VideoAPI
-         var isFullyLoaded =  ( this.buffered.length > 0 )  && ( this.buffered.end( this.buffered.length - 1 ) == this.duration );
-         if ( !isFullyLoaded ) {
-            return;
-         } else {
-            this.onprogress = null;
-            console.log('fully loaded');
-            ( !!cb )? cb() : null;
-         }
-      }
+      //this._loader.oncanplaythrough  = cb;
+      //
+      this._loader.onallloaded = cb
+      //this._loader.onloadeddata = function ( e ){
+         ////Check if videos is fully loaded ( already in the cache ) in this case the onprogress event won't be triggered. #IhateHTML5VideoAPI
+         //var isFullyLoaded =  ( this.buffered.length > 0 )  && ( this.buffered.end( this.buffered.length - 1 ) == this.duration );
+         //if ( !isFullyLoaded ) {
+            //return;
+         //} else {
+            //this.onprogress = null;
+            //console.log('fully loaded');
+            //( !!cb )? cb() : null;
+         //}
+      //}
 
 
-      this._loader.onprogress = function (e) {
-         if( this.buffered.length > 0 ) {
-            var ratio = this.buffered.end( this.buffered.length - 1 ) / this.duration;
-            console.log(ratio, 'loaded');
-            if( ratio > 0.95 ) {
-               console.log(' 95% loaded');
-               ( !!cb )? cb() : null;
-               // Is this dangerous?
-               //this.onprogress = null
-               //this.onloadeddata = null
-            }
-         }
-      }
    },
 
    playVideo: function ( video ){
-     if( video.loaded ) {
-        this._player.src = videos.getPath( video );
-        this.loadVideo( video.index + 1 );
-     } else {
-        // loadVideo with cb
-        this.loadVideo( video.index , function (e){
+     try {
+        if( video.loaded ) {
+           console.log('video already loaded');
+           this._player.src = videos.getPath( video );
+           this.loadVideo( video.index + 1 );
+        } else {
+           console.log('preloading video');
+           // loadVideo with cb
+           this.loadVideo( video.index , function (e){
 
-           //console.log('ok loaded');
-           video.loaded = true;
-           this.playVideo( video );
+              //console.log('ok loaded');
+              video.loaded = true;
+              this.playVideo( video );
 
-        }.bind(this));
-     }
+           }.bind(this));
+        }
+      } catch(err) {
+         console.warn('video not found: skipping')
+      }
    },
 
    clear: function () {
@@ -170,7 +181,7 @@ Player.prototype = {
 
 
 /////////////////////////////////////
-//     DataSource 
+//     DataSource
 /////////////////////////////////////
 
 var VideoDataSource = function() {};
@@ -189,13 +200,13 @@ VideoDataSource.prototype = {
 
    getPath: function( index_or_video ) {
       var video = ( !!index_or_video.index )? index_or_video : this.findByIndex( index_or_video );
-      return CONSTS.directory + video.name;
+      //return video.path;
+      return CONSTS.directory + video.name + "_35.mp4";
    },
 
    markAsLoaded: function ( index ){
       this.findByIndex( controller.current + 1 ).loaded = true;
    }
-   
 }
 
 
@@ -216,11 +227,12 @@ Controller.prototype = {
    },
 
    play: function ( index ){
-     if( !index ) { 
+     if( !index ) {
         index = this._getCurrent();
      } else {
         this.player.clear();
      }
+
      var video = videos.findByIndex( index );
      this._setCurrent(video.index);
 
@@ -246,10 +258,11 @@ Controller.prototype = {
       if( this.current != 1 ) {
          return this.current;
       }
-      // try to get current from cookie
-      var cookie = document.cookie
-      if ( cookie !== '' ) {
-         return cookie.split('=')[1];
+
+      var current = readCookie('last_read_video');
+
+      if ( !!current ) {
+         return current;
       } else {
          return this.current;
       }
@@ -270,6 +283,7 @@ Map.prototype =  {
    mapName: 'stanbienaives.l752j3lk',
    accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
    center_map: true,
+   simple_center: true,
    init: function( cb ) {
 
       // initializing map
@@ -279,9 +293,10 @@ Map.prototype =  {
          //inertiaMaxSpeed: 100,
       })
 
+      this._map.setZoom(3);
 
       // Retrive geoJSON from mapbox when ready
-      // TODO: better tu fill up from url?: https://www.mapbox.com/mapbox.js/example/v1.0.0/geojson-marker-from-url/
+      // TODO: better to dynamically fill up from url?: https://www.mapbox.com/mapbox.js/example/v1.0.0/geojson-marker-from-url/
       this._map.featureLayer.on('ready', function(e) {
 
           this.geoJSON = this._map.featureLayer.toGeoJSON()
@@ -294,8 +309,13 @@ Map.prototype =  {
       this._map.on('dragstart', function () {
 
          this.center_map = false;
+         // reactivate center_map after 20sec
+         setTimeout( function ( ){
+            this.center_map = true;
+         }.bind(this), 20000 );
 
       }.bind(this));
+
    },
    setLayer: function () {
 
@@ -338,13 +358,24 @@ Map.prototype =  {
       if( !this.center_map ) {
          return;
       }
+
       ( position.latitude )? position.lat = position.latitude : null;
       ( position.longitude )? position.lon = position.longitude : null;
+
+      if( this.simple_center ){
+         this._map.panToOffset( position, getPlayerOffset(), {
+            animate: true,
+            duration: 1
+         });
+         return;
+      }
+
+      //  automated centering #overkill
       // fit map to last two points then zoom in
       if( !!index && index !== 1 ) {
          var previous_position = videos.findByIndex( index - 1 );
          previous_position = previous_position.position;
-         //map.setZoom(30);
+
          if ( !!previous_position ) {
             ( previous_position.latitude )? previous_position.lat = previous_position.latitude : null;
             ( previous_position.longitude )? previous_position.lon = previous_position.longitude : null;
