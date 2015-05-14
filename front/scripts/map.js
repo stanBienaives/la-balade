@@ -97,6 +97,11 @@ Player.prototype = {
    initPlayer: function (){
       this._player = document.getElementById('player');
 
+      this._player.onclick = function ( e ){
+         console.log('clicked');
+         this.play();
+      }
+
       this._player.onended = function ( e ){
          spinner.show();
          controller.next();
@@ -129,6 +134,7 @@ Player.prototype = {
 
    loadVideo: function ( index, cb ){
       this._loader.src = videos.getPath( index );
+      this._loader.load();
 
       // oncanplaythrough is not restrictive enought we would like the playing to start when the whole video is loaded..
       // onprogress looks like a better solution ( > 0.99 ) but cannot make it work... still digging
@@ -155,6 +161,7 @@ Player.prototype = {
         if( video.loaded ) {
            console.log('video already loaded');
            this._player.src = videos.getPath( video );
+           this._player.play();
            this.loadVideo( video.index + 1 );
         } else {
            console.log('preloading video');
@@ -425,6 +432,12 @@ var Loader = function (){
 Loader.prototype = {
    init: function() {
       this._spinner = document.getElementById('spinner');
+
+      this._spinner.onclick = function ( e ){
+         // delegate click to player
+         document.getElementById('player').click();
+      }
+
       this.show();
    },
 
