@@ -5,7 +5,8 @@
 
 //var directory = "/Users/sebastienvian/Desktop/photos-iphone/"
 var CONSTS = {
-   directory: "https://s3-eu-west-1.amazonaws.com/la-ballade/videos/",
+   //directory: "https://monde.la-balade.fr/videos/",
+   directory: "https://s3-eu-west-1.amazonaws.com/monde.la-balade.fr/videos/",
 }
 
 ///////////////////////////////
