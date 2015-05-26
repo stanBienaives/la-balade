@@ -21,6 +21,6 @@ echo "converting ${file} \n";
   echo ${file};
   ffmpeg -i "${file}" -y -c:v libx264 -crf 35  "${output}";
   echo "uploading ${output} \n"
-  aws s3 cp --acl public-read "${output}" s3://la-ballade/videos/
+  aws s3 cp --acl public-read --region eu-west-1 "${output}" s3://monde.la-balade.fr/videos/
   rm "${output}"
 done;
