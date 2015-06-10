@@ -5,6 +5,8 @@ require 'pry'
 
 
 # Etract exif properties of files in a given directory
+#
+#
 class GPSExtractor
 
   def initialize( options= {} )
@@ -13,40 +15,18 @@ class GPSExtractor
     raise ArgumentError, 'you should give at least a directory of a tag' if options[:directory].nil? && options[:filter_by_tag].nil?
     @directory = options[:directory]
     @type_of_file = options[:type_of_file] || ['JPG','MOV','mp4']
-    @set_description = options[:set_description] || false
-    @print_stats = options[:print_stats] || false
 
-    # options to filter by tag (only OSX )
-    # !! Caution in this case the given directory is not used files will be searched in all the computer
-    @filter_by_tag = options[:filter_by_tag] || false
-    @current_directory = %x(pwd)
   end
 
-  def extract_all_postions
-    interpolations
-    stats if @print_stats
-    filter_by_tag if @filter_by_tag
-    cleaning
-    numbering
-    return data_extraction
+  def save( file )
+    File.open( file, 'w' ) do |f|
+      f.write extract_all_postions.to_json
+    end
   end
 
 
 private
 
-  # simple wrapper for exiftool command line tool
-  def extract
-    json = []
-    @directory.map do |dir|
-       cmd = "exiftool -j #{@type_of_file.map{ |type| dir + "/*" + type }.join(' ')}"
-       begin
-         json += JSON.parse(%x(#{cmd}))
-       rescue
-         next
-       end
-    end
-    json
-  end
 
 
   # make interpolation for image not geotagged
@@ -105,83 +85,9 @@ private
   end
 
 
-  def filter_by_tag
-    paths = %x(mdfind 'kMDItemUserTags == #{@filter_by_tag}').split(/\n/)
-    data_extraction.keep_if { |d| paths.include?(d[:path]) }
-  end
-
-
-  # extract meaningful information from raw exiftool output
-  def data_extraction
-    return @data_extraction if @data_extraction
-    #json = JSON.parse(%x(#{cmd}))
-    json = extract
-    @data_extraction = json.map do |j|
-      begin
-        {
-          position: coordinate_decimal( j["GPSPosition"]),
-          created_at: convert_proper_date_format( j["CreateDate"] ),
-          name: j['FileName'],
-          path: j["Directory"] + '/' + j['FileName'],
-          type: j['FileType'],
-          id: j['FileName'], # identifier will be the filename
-          description: description_from_coordinates( coordinate_decimal( j["GPSPosition"]) ),
-          altitude: j['GPSAltitude']
-        }
-      rescue
-         nil
-      end
-    end
-
-    @data_extraction.reject!(&:nil?)
-  end
-
-
-  # Transform coordinate into decimal
-  def coordinate_decimal( raw_data )
-    #format "24 deg 47' 24.99\" S, 65 deg 24' 14.95\" W"
-    return nil if raw_data.nil?
-    longitude = raw_data.split(', ')[1]
-    latitude = raw_data.split(', ')[0]
-    latitude  =  latitude.match /([0-9]{1,3}) deg ([0-9]{1,3})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
-    longitude =  longitude.match /([0-9]{1,3}) deg ([0-9]{1,3})' ([0-9]{1,2}.[0-9]{1,2})\" ([S,N,W,E])/
-    {
-      latitude: convert_polar_to_sign(  latitude[4]  ) * convert_sexadecimal( latitude[1], latitude[2] , latitude[3]),
-      longitude: convert_polar_to_sign( longitude[4]) * convert_sexadecimal( longitude[1], longitude[2] , longitude[3])
-    }
-  end
-
-  def convert_sexadecimal( degres, seconds, cents )
-    degres.to_f + seconds.to_f / 60 + cents.to_f / 1000000
-  end
-
-  def convert_polar_to_sign( polar )
-    return -1 if polar == 'S' || polar == 'W'
-    return 1 if polar == 'N' || polar == 'E'
-  end
-
-  def convert_proper_date_format( raw_format )
-    #2015:01:15 20:44:20 => 2015/01/15 20:44:20
-    date = raw_format.split(' ')[0]
-    time = raw_format.split(' ')[1]
-    DateTime.parse "#{ date.gsub(':','/') } #{time}"
-  end
-
-  # fetch place description based on position
-  def description_from_coordinates( p )
-    return "" unless @set_description
-    return "" if p.nil?
-    Timeout.timeout(2) do
-      address = Geocoder.address([p[:latitude], p[:longitude]])
-      p address
-      return address
-    end
-  rescue => e
-    p 'geocoding timeout'
-    return ""
-  end
-
 end
+
+
 
 
 # Convert array of positions into a proper Geojson file and save it
