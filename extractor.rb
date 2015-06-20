@@ -1,11 +1,21 @@
 require 'pry'
 require 'json'
 require 'date'
+require 'digest/sha1'
 
 class Extractor
 
 
   @@types_whitelist = ['JPG','MOV','mp4']
+
+
+  def self.extract( directories )
+    self.new.extract( directories )
+  end
+
+  def self.extract_and_save( directories, path )
+    self.new.extract_and_save( directories, path )
+  end
   
   def extract( directories )
     directories = [directories] unless directories.is_a? Array
@@ -15,14 +25,20 @@ class Extractor
     end
 
     @positions.reject!(&:nil?)
+    #@positions.reject{ |p| p[:position].nil? }
+    return @positions #Brainfuck: reject! return nil if nothing has been deleted...
     
   end
 
   def extract_and_save(directories, path)
-    @position ||= extract(directories)
+    @positions ||= extract(directories)
     File.open( path, 'w') do |f|
       f.write( @positions.to_json )
     end
+  end
+
+  def digest_path( full_path )
+    Digest::SHA1.hexdigest( full_path )
   end
 
 
@@ -34,7 +50,7 @@ class Extractor
     json = []
     directories.each do |dir|
       types_whitelist.each do |type|
-        p cmd = "exiftool -j -ext #{type} #{dir}"
+        cmd = "exiftool -j -ext #{type} #{dir}"
         json += JSON.parse(%x(#{cmd})) rescue next
       end
     end
@@ -42,11 +58,16 @@ class Extractor
   end
 
   def apply_label( raw_extract )
+    full_path =  raw_extract["Directory"] + '/' + raw_extract['FileName']
+    created_at = convert_proper_date_format( raw_extract["CreateDate"] )
     {
       position: coordinate_decimal( raw_extract["GPSPosition"]),
-      created_at: convert_proper_date_format( raw_extract["CreateDate"] ),
+      created_at: created_at,
+      timestamp: created_at.to_time.to_i,
+
       name: raw_extract['FileName'],
-      path: raw_extract["Directory"] + '/' + raw_extract['FileName'],
+      path: full_path,
+      digest: digest_path( full_path ),
       type: raw_extract['FileType'],
       id: raw_extract['FileName'], # identifier will be the filename
       description: description_from_coordinates( coordinate_decimal( raw_extract["GPSPosition"]) ),
@@ -98,6 +119,12 @@ class Extractor
     p 'geocoding timeout'
     return ""
   end
+  
+  #def stats
+    #puts "Total files:            #{data_extraction.count}"
+    #puts "Total with no GPSdata:  #{data_extraction.count { |d| d[:position].nil?   } }"
+    #puts "videos with no GPSdata: #{data_extraction.count { |d| d[:position].nil? && d[:type] == 'MOV' } }"
+  #end
 
 end
 

@@ -288,7 +288,8 @@ var Map = function (){
 };
 
 Map.prototype =  {
-   mapName: 'stanbienaives.l752j3lk',
+   //mapName: 'stanbienaives.l752j3lk',
+   mapName: 'stanbienaives.mdlh5fnc',
    accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
    center_map: true,
    simple_center: true,
@@ -334,7 +335,7 @@ Map.prototype =  {
 
         marker.on('click', function ( e ){
            console.log('clicked');
-           console.log( marker.feature.properties.name );
+           console.log( marker.feature.properties );
            controller.play( marker.feature.properties.index );
            this.center_map = true;
         });
