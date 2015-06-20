@@ -2,7 +2,7 @@
 IFS=$'\n'
 files=$(mdfind 'kMDItemUserTags == Violet');
 
-aws s3 ls s3://la-ballade/videos/ | grep _35.mp4  > aws.tmp
+aws s3 ls s3://monde.la-balade.fr/videos/ | grep _35.mp4  > aws.tmp
 #files=$(mdfind 'kMDItemUserTags == Violet');
 for file in ${files}
 do
