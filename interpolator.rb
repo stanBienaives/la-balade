@@ -32,13 +32,13 @@ class Interpolator
     files.each do |file|
       @positions.push interpolate( inputs, file )
     end
-    
+
     cleaning
     indexing
   end
 
 
-  def interpolate( sorted_positions, file ) 
+  def interpolate( sorted_positions, file )
     # find matching digect
     matching = sorted_positions.find { |pos| pos[:digest] == Extractor.new.digest_path( file ) }
     if !matching.nil? && !matching[:position].nil?

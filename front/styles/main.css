@@ -201,6 +201,13 @@ p.link > a {
    /* background: blue; */
 }
 
+.zefal {
+  margin: auto;
+
+  text-align: center;
+  color: rgb(110, 107, 107);
+}
+
 
 .spinner {
   margin: auto;
