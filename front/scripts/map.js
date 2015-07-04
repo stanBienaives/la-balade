@@ -288,8 +288,8 @@ var Map = function (){
 };
 
 Map.prototype =  {
-   //mapName: 'stanbienaives.l752j3lk',
-   mapName: 'stanbienaives.mdlh5fnc',
+   mapName: 'stanbienaives.l752j3lk',
+   //mapName: 'stanbienaives.mdlh5fnc',
    accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
    center_map: true,
    simple_center: true,
