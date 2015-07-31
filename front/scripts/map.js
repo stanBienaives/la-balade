@@ -288,7 +288,8 @@ var Map = function (){
 };
 
 Map.prototype =  {
-   mapName: 'stanbienaives.l752j3lk',
+   mapName: 'stanbienaives.l752j3lk', // prod
+   //mapName: 'stanbienaives.n2377313', // test empty
    //mapName: 'stanbienaives.mdlh5fnc',
    accessToken: 'pk.eyJ1Ijoic3RhbmJpZW5haXZlcyIsImEiOiJLREd2TFJrIn0.GM-VhP8yVgBzWrJrMb_8Fw',
    center_map: true,
@@ -300,15 +301,19 @@ Map.prototype =  {
          accessToken: this.accessToken
          //inertiaDeceleration: 100000,
          //inertiaMaxSpeed: 100,
-      })
+      }).setView([48.853, 2.3488], 3);
 
-      this._map.setZoom(3);
+
 
       // Retrive geoJSON from mapbox when ready
       // TODO: better to dynamically fill up from url?: https://www.mapbox.com/mapbox.js/example/v1.0.0/geojson-marker-from-url/
+      this._map.featureLayer.loadURL('videos.json');
+
       this._map.featureLayer.on('ready', function(e) {
 
-          this.geoJSON = this._map.featureLayer.toGeoJSON()
+          this.geoJSON = this._map.featureLayer.toGeoJSON();
+          this._map.setZoom(3);
+
           this.setLayer();
           cb( this.geoJSON );
 
