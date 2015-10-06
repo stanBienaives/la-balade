@@ -9,6 +9,7 @@ Extractor.extract_and_save [
   "/Users/sebastienvian/Desktop/photos-iphone-as-2",
   "/Users/sebastienvian/Desktop/photos-iphone-as-3",
   "/Users/sebastienvian/Desktop/photos-iphone-eu-1",
+  "/Users/sebastienvian/Desktop/photos-iphone-eu-2",
   "/Users/sebastienvian/Desktop/selection-videos"
 ], "positions.json"
 
